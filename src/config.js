@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'fs';
+import { pathToFileURL } from 'url';
 
 const DEFAULTS = {
   browser:   'chromium',
@@ -24,7 +25,7 @@ export async function loadConfig(cwd = process.cwd()) {
   }
 
   try {
-    const mod = await import(configPath);
+    const mod = await import(pathToFileURL(configPath).href);
     const cfg = mod.default || mod;
     return { ...DEFAULTS, ...cfg };
   } catch (err) {

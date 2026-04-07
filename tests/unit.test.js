@@ -4,9 +4,10 @@
  * Run: node tests/unit.test.js
  */
 
-import { parseFlow }     from '../src/parser.js';
-import { interpretStep } from '../src/interpreter.js';
-import { renderReport }  from '../src/reporter.js';
+import { parseFlow }              from '../src/parser.js';
+import { interpretStep }          from '../src/interpreter.js';
+import { renderReport }           from '../src/reporter.js';
+import { loadConfig, mergeConfig } from '../src/config.js';
 import fs   from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -78,13 +79,14 @@ test('steps have index and raw fields', () => {
   expect(first.raw).toContain('navigate to');
 });
 
-test('defaults browser to chromium if not set', () => {
+test('returns null for unset config fields (defaults applied by mergeConfig)', () => {
   const tmp = '/tmp/test-defaults.flow';
   fs.writeFileSync(tmp, 'steps:\n  - navigate to https://example.com\n');
   const flow = parseFlow(tmp);
-  expect(flow.browser).toBe('chromium');
-  expect(flow.headless).toBe(true);
-  expect(flow.timeout).toBe(30000);
+  // Parser intentionally returns null so mergeConfig can apply config-file values
+  expect(flow.browser).toBe(null);
+  expect(flow.headless).toBe(null);
+  expect(flow.timeout).toBe(null);
   fs.unlinkSync(tmp);
 });
 
@@ -95,6 +97,42 @@ test('throws on missing steps', () => {
   try { parseFlow(tmp); } catch (_) { threw = true; }
   if (!threw) throw new Error('Expected parse error');
   fs.unlinkSync(tmp);
+});
+
+// ─── MERGECONFIG TESTS ────────────────────────────────────────────────────────
+
+console.log('\n  mergeConfig\n');
+
+test('mergeConfig applies config values when flow has no overrides', () => {
+  // loadConfig() always returns the full defaults object — mergeConfig is never called with {}
+  const flow   = { browser: null, headless: null, timeout: null, retries: null, on_fail: null, viewport: null };
+  const config = { browser: 'chromium', headless: true, timeout: 30000, retries: 0, on_fail: 'screenshot', viewport: { width: 1280, height: 720 } };
+  const merged = mergeConfig(config, flow);
+  expect(merged.browser).toBe('chromium');
+  expect(merged.headless).toBe(true);
+  expect(merged.timeout).toBe(30000);
+  expect(merged.retries).toBe(0);
+  expect(merged.on_fail).toBe('screenshot');
+});
+
+test('mergeConfig uses config file values over defaults when flow is unset', () => {
+  const flow   = { browser: null, headless: null, timeout: null, retries: null, on_fail: null, viewport: null };
+  const config = { browser: 'firefox', headless: false, timeout: 15000, retries: 2, on_fail: 'stop', viewport: { width: 1440, height: 900 } };
+  const merged = mergeConfig(config, flow);
+  expect(merged.browser).toBe('firefox');
+  expect(merged.headless).toBe(false);
+  expect(merged.timeout).toBe(15000);
+  expect(merged.retries).toBe(2);
+  expect(merged.on_fail).toBe('stop');
+});
+
+test('mergeConfig: flow values override config values', () => {
+  const flow   = { browser: 'webkit', headless: false, timeout: null, retries: null, on_fail: null, viewport: null };
+  const config = { browser: 'firefox', headless: true, timeout: 15000, retries: 2, on_fail: 'stop', viewport: null };
+  const merged = mergeConfig(config, flow);
+  expect(merged.browser).toBe('webkit');
+  expect(merged.headless).toBe(false);
+  expect(merged.timeout).toBe(15000); // from config, flow didn't set it
 });
 
 // ─── INTERPRETER TESTS ────────────────────────────────────────────────────────
@@ -381,14 +419,6 @@ test('generates valid HTML report', () => {
   fs.unlinkSync(outPath);
 });
 
-// ─── SUMMARY ──────────────────────────────────────────────────────────────────
-
-const total = passed + failed;
-console.log(`\n  ${'─'.repeat(40)}`);
-console.log(`  ${failed === 0 ? '✓' : '✕'} ${passed}/${total} tests passed\n`);
-
-if (failed > 0) process.exit(1);
-
 // ─── EXPORTER TESTS ───────────────────────────────────────────────────────────
 
 console.log('\n  Exporter\n');
@@ -401,11 +431,13 @@ test('exports .flow to valid .spec.ts', () => {
   const src  = fs.readFileSync(out, 'utf8');
   expect(src).toContain("import { test, expect } from '@playwright/test'");
   expect(src).toContain("test('User login journey'");
-  expect(src).toContain('page.goto(');
+  expect(src).toContain("waitUntil: 'domcontentloaded'");
   expect(src).toContain('getByLabel(/username/i)');
   expect(src).toContain('getByLabel(/password/i)');
-  expect(src).toContain("toHaveURL(//secure/)");
+  expect(src).toContain("toHaveURL(//secure/");
   expect(src).toContain("page.screenshot(");
+  // Tags written as Playwright annotation
+  expect(src).toContain("tag: ['@auth', '@smoke']");
   fs.unlinkSync(out);
 });
 
@@ -570,3 +602,11 @@ test('colors wrap string correctly (or pass through when disabled)', () => {
   if (typeof result !== 'string') throw new Error('Expected string');
   if (!result.includes('hello')) throw new Error('Expected "hello" in output');
 });
+
+// ─── SUMMARY ──────────────────────────────────────────────────────────────────
+
+const total = passed + failed;
+console.log(`\n  ${'─'.repeat(40)}`);
+console.log(`  ${failed === 0 ? '✓' : '✕'} ${passed}/${total} tests passed\n`);
+
+if (failed > 0) process.exit(1);

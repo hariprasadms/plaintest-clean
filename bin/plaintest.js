@@ -7,29 +7,35 @@ import { parseFlow }                      from '../src/parser.js';
 import pc                                 from '../src/colors.js';
 import path                               from 'path';
 import fs                                 from 'fs';
+import { fileURLToPath }                  from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const { version } = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 'utf8'));
 
 const args = process.argv.slice(2);
 const cmd  = args[0];
 const rest = args.slice(1);
 
 const BANNER = `
-  ${pc.bold(pc.magenta('plaintest'))} ${pc.dim('v0.1.0')} — plain English test runner
+  ${pc.bold(pc.magenta('plaintest'))} ${pc.dim(`v${version}`)} — plain English test runner
   ${pc.dim('by PromptQA · MIT licence · github.com/promptqa/plaintest')}
 `;
 
 if (!cmd || cmd === '--help' || cmd === '-h') {
   console.log(BANNER);
   console.log(`  ${pc.bold('Usage:')}
-    ${pc.cyan('plaintest run')} ${pc.dim('[file.flow | --dir ./tests]')}   Run .flow test files
-    ${pc.cyan('plaintest run')} ${pc.dim('--export')}                        Run and export .spec.ts
-    ${pc.cyan('plaintest export')} ${pc.dim('[file.flow ...]')}              Export .flow to Playwright .spec.ts
-    ${pc.cyan('plaintest validate')} ${pc.dim('[file.flow ...]')}            Validate .flow files
-    ${pc.cyan('plaintest init')}                                  Create a sample .flow file
-    ${pc.cyan('plaintest --help')}                                Show this help
+    ${pc.cyan('plaintest run')} ${pc.dim('[file.flow | --dir ./tests]')}            Run .flow test files
+    ${pc.cyan('plaintest run')} ${pc.dim('--filter <tag>')}                          Run only flows matching a tag
+    ${pc.cyan('plaintest run')} ${pc.dim('--export')}                                Run and export .spec.ts
+    ${pc.cyan('plaintest export')} ${pc.dim('[file.flow ...]')}                      Export .flow to Playwright .spec.ts
+    ${pc.cyan('plaintest validate')} ${pc.dim('[file.flow ...]')}                    Validate .flow files
+    ${pc.cyan('plaintest init')}                                          Create a sample .flow file
+    ${pc.cyan('plaintest --help')}                                        Show this help
 
   ${pc.bold('Examples:')}
     ${pc.dim('$')} plaintest run login.flow
     ${pc.dim('$')} plaintest run --dir ./tests
+    ${pc.dim('$')} plaintest run --filter smoke
     ${pc.dim('$')} plaintest export login.flow
     ${pc.dim('$')} plaintest validate *.flow
     ${pc.dim('$')} plaintest init

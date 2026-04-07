@@ -1,4 +1,4 @@
-import { interpretStep, resolveTarget, resolveField } from './interpreter.js';
+import { interpretStep, resolveTarget, resolveField, resolveSelect } from './interpreter.js';
 import path from 'path';
 import fs from 'fs';
 
@@ -149,7 +149,8 @@ async function executeAction(page, step, flow, ctx) {
 
   // SELECT
   if (t === 'select') {
-    const loc = resolveField(page, step.field);
+    const loc = resolveSelect(page, step.field);
+    await loc.waitFor({ state: 'visible', timeout: flow.timeout });
     await loc.selectOption({ label: step.option });
     return;
   }

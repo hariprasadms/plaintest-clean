@@ -19,20 +19,20 @@ export function validateFlow(flow) {
     catch (_) { errors.push(`Invalid base url: "${flow.url}"`); }
   }
 
-  // Browser check
+  // Browser check — null means "inherit from config", so only validate explicit values
   const validBrowsers = ['chromium', 'firefox', 'webkit'];
-  if (!validBrowsers.includes(flow.browser)) {
+  if (flow.browser !== null && !validBrowsers.includes(flow.browser)) {
     errors.push(`Invalid browser "${flow.browser}" — must be one of: ${validBrowsers.join(', ')}`);
   }
 
-  // on_fail check
+  // on_fail check — null means "inherit from config"
   const validOnFail = ['screenshot', 'continue', 'stop'];
-  if (!validOnFail.includes(flow.on_fail)) {
+  if (flow.on_fail !== null && !validOnFail.includes(flow.on_fail)) {
     errors.push(`Invalid on_fail "${flow.on_fail}" — must be: screenshot | continue | stop`);
   }
 
-  // Timeout
-  if (flow.timeout < 1000) {
+  // Timeout — null means "inherit from config"
+  if (flow.timeout !== null && flow.timeout < 1000) {
     warnings.push(`timeout is very low (${flow.timeout}ms) — steps may fail. Recommended: 15000+`);
   }
 

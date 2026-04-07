@@ -5,7 +5,9 @@ tests/
 example.flow
 setup.js
 plaintest.config.js
+DEVELOPMENT.md
+INSTALL.md
 .DS_Store
 *.log
 *.tgz
-INSTALL.md
+package-lock.json

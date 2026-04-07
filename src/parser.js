@@ -44,14 +44,17 @@ export function parseFlow(filePath) {
 
   return {
     name:     data.name     || path.basename(filePath, '.flow'),
-    url:      data.url      || null,
-    browser:  data.browser  || 'chromium',
-    headless: data.headless !== false,
-    timeout:  data.timeout  || 30000,
-    retries:  data.retries  || 0,
-    tags:     data.tags     || [],
-    viewport: data.viewport || { width: 1280, height: 720 },
-    on_fail:  data.on_fail  || 'screenshot',
+    url:      data.url      ?? null,
+    // These fields are intentionally left null when not set in the .flow file
+    // so that mergeConfig can correctly apply plaintest.config.js values.
+    // Defaults are applied in mergeConfig (src/config.js).
+    browser:  data.browser  ?? null,
+    headless: data.headless ?? null,
+    timeout:  data.timeout  ?? null,
+    retries:  data.retries  ?? null,
+    on_fail:  data.on_fail  ?? null,
+    viewport: data.viewport ?? null,
+    tags:     data.tags     ?? [],
     steps:    data.steps.map((s, i) => ({
       index: i,
       raw:   String(s).trim(),

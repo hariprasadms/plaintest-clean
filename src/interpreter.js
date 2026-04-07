@@ -24,7 +24,6 @@
  *   press {key}
  *   hover over {text}
  *   scroll to {text}
- *   upload "{file}" to {field}
  *
  * ASSERTIONS
  *   assert heading says "{text}"
@@ -231,6 +230,20 @@ export function resolveField(page, field) {
     .or(page.getByPlaceholder(new RegExp(escapeReg(field), 'i')))
     .or(page.getByRole('textbox', { name: new RegExp(escapeReg(field), 'i') }))
     .or(page.getByRole('combobox', { name: new RegExp(escapeReg(field), 'i') }))
+    .first();
+}
+
+/**
+ * Resolve a select/dropdown field to a Playwright locator.
+ * Extends resolveField with attribute-based fallbacks for unlabeled <select>
+ * elements (matched by id, name, or title containing the field text).
+ */
+export function resolveSelect(page, field) {
+  const re    = new RegExp(escapeReg(field), 'i');
+  const lower = field.toLowerCase();
+  return page.getByRole('combobox', { name: re })
+    .or(page.getByLabel(re))
+    .or(page.locator(`select[id*="${lower}"], select[name*="${lower}"], select[title*="${lower}"]`))
     .first();
 }
 

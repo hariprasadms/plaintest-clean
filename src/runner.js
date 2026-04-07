@@ -6,6 +6,10 @@ import { loadConfig, mergeConfig } from './config.js';
 import pc from './colors.js';
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const { version } = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 'utf8'));
 
 export async function run(args, opts = {}) {
   const projectConfig = await loadConfig();
@@ -15,7 +19,9 @@ export async function run(args, opts = {}) {
   // Extract --filter tag
   const filterIdx = args.indexOf('--filter');
   const filterTag = filterIdx > -1 ? args[filterIdx + 1] : null;
-  const cleanArgs = args.filter((a, i) => a !== '--filter' && i !== filterIdx + 1);
+  const cleanArgs = filterIdx > -1
+    ? args.filter((_, i) => i !== filterIdx && i !== filterIdx + 1)
+    : [...args];
 
   // Resolve file list from args
   const files = await resolveFiles(cleanArgs);
@@ -26,7 +32,7 @@ export async function run(args, opts = {}) {
     return { passed: 0, failed: 1 };
   }
 
-  console.log(`\n  ${pc.bold(pc.magenta('plaintest'))} ${pc.dim('v0.1.0')}`);
+  console.log(`\n  ${pc.bold(pc.magenta('plaintest'))} ${pc.dim(`v${version}`)}`);
   if (filterTag) console.log(`  ${pc.dim(`Filter: tag=${filterTag}`)}`);
   console.log(`  ${pc.dim(`Running ${files.length} flow file${files.length > 1 ? 's' : ''}`)}\n`);
 

@@ -38,12 +38,12 @@ export function exportToPlaywright(flow, outputDir = '.plaintest') {
     lines.push(``);
   }
 
-  // Tags as annotation
+  // Tags as Playwright test annotation — test('name', { tag: ['@smoke'] }, async ...)
   const tagAnnotation = flow.tags?.length
-    ? `  tag: [${flow.tags.map(t => `'@${t}'`).join(', ')}],\n  `
-    : `  `;
+    ? `{ tag: [${flow.tags.map(t => `'@${t}'`).join(', ')}] }, `
+    : ``;
 
-  lines.push(`test('${escTs(flow.name)}', async ({ page }) => {`);
+  lines.push(`test('${escTs(flow.name)}', ${tagAnnotation}async ({ page }) => {`);
   lines.push(``);
 
   // Navigate to base URL if set
@@ -78,13 +78,18 @@ export function exportToPlaywright(flow, outputDir = '.plaintest') {
 }
 
 function stepToTs(s, raw, flow) {
-  const timeout = flow.timeout !== 30000 ? `, { timeout: ${flow.timeout} }` : ``;
+  // tOpt  — standalone options object e.g. { timeout: 15000 } or '' for default
+  // tArg  — as an extra argument       e.g. , { timeout: 15000 } or ''
+  // tInline — as extra key-value pairs  e.g. , timeout: 15000 or ''
+  const tOpt    = flow.timeout !== 30000 ? `{ timeout: ${flow.timeout} }` : ``;
+  const tArg    = tOpt ? `, ${tOpt}` : ``;
+  const tInline = flow.timeout !== 30000 ? `, timeout: ${flow.timeout}` : ``;
 
   switch (s.action) {
 
-    // NAVIGATION
+    // NAVIGATION — always include waitUntil so generated code matches executor behaviour
     case 'navigate':
-      return `await page.goto('${s.url}'${timeout ? `, { waitUntil: 'domcontentloaded', timeout: ${flow.timeout} }` : ``});`;
+      return `await page.goto('${s.url}', { waitUntil: 'domcontentloaded'${tInline} });`;
     case 'reload':
       return `await page.reload();`;
     case 'back':
@@ -104,9 +109,11 @@ function stepToTs(s, raw, flow) {
     case 'clear':
       return `await page.getByLabel(/${escReg(s.field)}/i).clear();`;
 
-    // SELECT
-    case 'select':
-      return `await page.getByRole('combobox', { name: /${escReg(s.field)}/i }).selectOption({ label: '${escTs(s.option)}' });`;
+    // SELECT — try labelled combobox first, fall back to select[id/name/title] for unlabelled dropdowns
+    case 'select': {
+      const lower = s.field.toLowerCase();
+      return `await page.getByRole('combobox', { name: /${escReg(s.field)}/i }).or(page.getByLabel(/${escReg(s.field)}/i)).or(page.locator('select[id*="${lower}"], select[name*="${lower}"], select[title*="${lower}"]')).first().selectOption({ label: '${escTs(s.option)}' });`;
+    }
 
     // CHECK
     case 'check':
@@ -128,37 +135,37 @@ function stepToTs(s, raw, flow) {
 
     // ASSERTIONS
     case 'assertHeading':
-      return `await expect(page.getByRole('heading', { name: /${escReg(s.text)}/i })).toBeVisible()${timeout ? `.toBeVisible({ timeout: ${flow.timeout} })` : ''};`;
+      return `await expect(page.getByRole('heading', { name: /${escReg(s.text)}/i })).toBeVisible(${tOpt});`;
     case 'assertVisible':
-      return `await expect(page.getByText(/${escReg(s.text)}/i)).toBeVisible()${timeout};`;
+      return `await expect(page.getByText(/${escReg(s.text)}/i)).toBeVisible(${tOpt});`;
     case 'assertHidden':
-      return `await expect(page.getByText(/${escReg(s.text)}/i)).toBeHidden()${timeout};`;
+      return `await expect(page.getByText(/${escReg(s.text)}/i)).toBeHidden(${tOpt});`;
     case 'assertUrlContains':
-      return `await expect(page).toHaveURL(/${escReg(s.text)}/)${timeout};`;
+      return `await expect(page).toHaveURL(/${escReg(s.text)}/${tArg});`;
     case 'assertUrl':
-      return `await expect(page).toHaveURL('${escTs(s.url)}')${timeout};`;
+      return `await expect(page).toHaveURL('${escTs(s.url)}'${tArg});`;
     case 'assertTitle':
-      return `await expect(page).toHaveTitle(/${escReg(s.text)}/i)${timeout};`;
+      return `await expect(page).toHaveTitle(/${escReg(s.text)}/i${tArg});`;
     case 'assertValue':
-      return `await expect(page.getByLabel(/${escReg(s.field)}/i)).toHaveValue('${escTs(s.value)}')${timeout};`;
+      return `await expect(page.getByLabel(/${escReg(s.field)}/i)).toHaveValue('${escTs(s.value)}'${tArg});`;
     case 'assertDisabled':
-      return `await expect(${resolveLocatorTs('page', s.target)}).toBeDisabled()${timeout};`;
+      return `await expect(${resolveLocatorTs('page', s.target)}).toBeDisabled(${tOpt});`;
     case 'assertEnabled':
-      return `await expect(${resolveLocatorTs('page', s.target)}).toBeEnabled()${timeout};`;
+      return `await expect(${resolveLocatorTs('page', s.target)}).toBeEnabled(${tOpt});`;
     case 'assertPageContains':
-      return `await expect(page.getByText(/${escReg(s.text)}/i).first()).toBeVisible()${timeout};`;
+      return `await expect(page.getByText(/${escReg(s.text)}/i).first()).toBeVisible(${tOpt});`;
     case 'assertExists':
-      return `await expect(page.locator('${s.selector}')).toBeVisible()${timeout};`;
+      return `await expect(page.locator('${s.selector}')).toBeVisible(${tOpt});`;
     case 'assertNotExists':
-      return `await expect(page.locator('${s.selector}')).toBeHidden()${timeout};`;
+      return `await expect(page.locator('${s.selector}')).toBeHidden(${tOpt});`;
 
     // WAITS
     case 'wait':
       return `await page.waitForTimeout(${s.ms});`;
     case 'waitForVisible':
-      return `await page.getByText(/${escReg(s.text)}/i).waitFor({ state: 'visible'${timeout ? `, timeout: ${flow.timeout}` : ''} });`;
+      return `await page.getByText(/${escReg(s.text)}/i).waitFor({ state: 'visible'${tInline} });`;
     case 'waitForHidden':
-      return `await page.getByText(/${escReg(s.text)}/i).waitFor({ state: 'hidden'${timeout ? `, timeout: ${flow.timeout}` : ''} });`;
+      return `await page.getByText(/${escReg(s.text)}/i).waitFor({ state: 'hidden'${tInline} });`;
     case 'waitForNetwork':
       return `await page.waitForLoadState('networkidle');`;
 

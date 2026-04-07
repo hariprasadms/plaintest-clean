@@ -6,7 +6,7 @@ export default {
   browser: 'chromium',
 
   // Run headless (no visible browser window)
-  headless: true,
+  headless: false,
 
   // Timeout per step in milliseconds
   timeout: 30000,

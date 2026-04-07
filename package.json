@@ -1,14 +1,18 @@
 {
   "name": "@promptqa/plaintest",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Plain English test framework — write tests anyone can read, runs on Playwright",
   "type": "module",
   "bin": {
     "plaintest": "./bin/plaintest.js"
   },
   "main": "./src/index.js",
+  "types": "./src/index.d.ts",
   "exports": {
-    ".": "./src/index.js"
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    }
   },
   "files": [
     "bin/",
