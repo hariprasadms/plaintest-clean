@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# plaintest output
+.plaintest/
+
+# Generated example
+example.flow
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# Env
+.env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# npm pack output
+*.tgz

@@ -1,0 +1,11 @@
+# Never publish these
+tests/
+.plaintest/
+.github/
+example.flow
+setup.js
+plaintest.config.js
+.DS_Store
+*.log
+*.tgz
+INSTALL.md

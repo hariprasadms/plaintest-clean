@@ -1,0 +1,21 @@
+# plaintest example — login journey
+# Run: npx plaintest run examples/login.flow
+
+name: User login journey
+url: https://the-internet.herokuapp.com
+browser: chromium
+headless: true
+timeout: 30000
+retries: 1
+on_fail: screenshot
+tags: [auth, smoke]
+
+steps:
+  - navigate to https://the-internet.herokuapp.com/login
+  - assert heading says "Login Page"
+  - fill username with "tomsmith"
+  - fill password with "SuperSecretPassword!"
+  - click Login
+  - assert text "You logged into a secure area!" is visible
+  - assert url contains "/secure"
+  - take screenshot "login-success"

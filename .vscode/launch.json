@@ -1,0 +1,49 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run unit tests",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/tests/unit.test.js",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "plaintest init",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/bin/plaintest.js",
+      "args": ["init"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "plaintest validate (examples)",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/bin/plaintest.js",
+      "args": ["validate", "examples/login.flow"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "plaintest export (login)",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/bin/plaintest.js",
+      "args": ["export", "examples/login.flow"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "plaintest run (login) — needs Playwright",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/bin/plaintest.js",
+      "args": ["run", "examples/login.flow"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    }
+  ]
+}

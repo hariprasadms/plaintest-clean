@@ -1,0 +1,60 @@
+{
+  "name": "@promptqa/plaintest",
+  "version": "0.1.0",
+  "description": "Plain English test framework — write tests anyone can read, runs on Playwright",
+  "type": "module",
+  "bin": {
+    "plaintest": "./bin/plaintest.js"
+  },
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "examples/",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "playwright",
+    "testing",
+    "e2e",
+    "test-automation",
+    "plain-english",
+    "qa",
+    "automation",
+    "bdd",
+    "sdet",
+    "no-code"
+  ],
+  "author": {
+    "name": "Hariprasad",
+    "url": "https://promptqa.dev"
+  },
+  "license": "MIT",
+  "homepage": "https://promptqa.dev",
+  "bugs": {
+    "url": "https://github.com/promptqa/plaintest/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/promptqa/plaintest.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@playwright/test": "^1.52.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test":     "node tests/unit.test.js",
+    "validate": "node bin/plaintest.js validate examples/login.flow examples/form.flow",
+    "export":   "node bin/plaintest.js export examples/login.flow",
+    "setup":    "node setup.js",
+    "prepublishOnly": "npm test"
+  }
+}

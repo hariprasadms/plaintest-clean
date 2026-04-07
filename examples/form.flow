@@ -1,0 +1,17 @@
+# plaintest example — form validation
+# Run: npx plaintest run examples/form.flow
+
+name: Form inputs and dropdowns
+url: https://the-internet.herokuapp.com
+browser: chromium
+headless: true
+timeout: 30000
+tags: [forms, regression]
+
+steps:
+  - navigate to https://the-internet.herokuapp.com/dropdown
+  - assert heading says "Dropdown List"
+  - select "Option 1" from Dropdown
+  - take screenshot "dropdown-option-1"
+  - select "Option 2" from Dropdown
+  - take screenshot "dropdown-option-2"

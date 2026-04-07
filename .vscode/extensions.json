@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "eamodio.gitlens",
+    "github.vscode-pull-request-github",
+    "ms-vscode.vscode-node-azure-pack",
+    "redhat.vscode-yaml",
+    "streetsidesoftware.code-spell-checker"
+  ]
+}
